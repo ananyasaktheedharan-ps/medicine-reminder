@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: medicine_reminder
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d medicine_reminder"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      PORT: 4000
+      CORS_ORIGIN: http://localhost:3000
+      JWT_SECRET: change-me-to-a-long-random-string
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: medicine_reminder
+      DB_SYNC: "true"
+    ports:
+      - "4000:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Uncomment and point `build` at your Next.js folder (it has its own Dockerfile)
+  # frontend:
+  #   build: ./medicine-reminder-f
+  #   environment:
+  #     NEXT_PUBLIC_GRAPHQL_URL: http://localhost:4000/graphql
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - backend
+
+volumes:
+  pgdata:
