@@ -1,6 +1,13 @@
+
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import {
-  Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Relation,
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Relation,
 } from 'typeorm';
 import { User } from '../users/user.entity';
 
@@ -12,11 +19,11 @@ export class Profile {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Field()
+  @Field(() => String)
   @Column()
   name: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @Column({ type: 'varchar', nullable: true })
   relation?: string | null;
 

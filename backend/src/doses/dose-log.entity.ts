@@ -36,11 +36,11 @@ export class DoseLog {
   @Column({ type: 'varchar' })
   status: DoseStatus;
 
-  @Field({ nullable: true })
-  @Column({ type: 'bigint', nullable: true, transformer: bigintTransformer })
-  takenAt?: number | null;
+  @Field(() => Number, { nullable: true })
+@Column({ type: 'bigint', nullable: true, transformer: bigintTransformer })
+takenAt?: number | null;
 
-  @Field({ nullable: true })
-  @Column({ type: 'varchar', nullable: true })
-  note?: string | null;
+@Field(() => String, { nullable: true })
+@Column({ type: 'varchar', nullable: true })
+note?: string | null;
 }

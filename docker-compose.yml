@@ -31,15 +31,19 @@ services:
       db:
         condition: service_healthy
 
-  # Uncomment and point `build` at your Next.js folder (it has its own Dockerfile)
-  # frontend:
-  #   build: ./medicine-reminder-f
-  #   environment:
-  #     NEXT_PUBLIC_GRAPHQL_URL: http://localhost:4000/graphql
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - backend
+  
+  frontend:
+    build:
+      context: ./medicine-reminder-frontend
+      args:
+        NEXT_PUBLIC_GRAPHQL_URL: http://localhost:4000/graphql
+    environment:
+      NEXT_PUBLIC_GRAPHQL_URL: http://localhost:4000/graphql
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
 
 volumes:
   pgdata:

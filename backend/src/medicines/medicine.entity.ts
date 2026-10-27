@@ -23,20 +23,20 @@ export class Medicine {
   @Column()
   dosage: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @Column({ type: 'varchar', nullable: true })
   instructions?: string | null;
 
-  /** YYYY-MM-DD */
-  @Field({ nullable: true })
+/** YYYY-MM-DD */
+  @Field(() => String, { nullable: true })
   @Column({ type: 'date', nullable: true })
   startDate?: string | null;
 
-  /** YYYY-MM-DD */
-  @Field({ nullable: true })
+/** YYYY-MM-DD */
+  @Field(() => String, { nullable: true })
   @Column({ type: 'date', nullable: true })
   endDate?: string | null;
-
+  
   @Field()
   @Column({ default: true })
   active: boolean;

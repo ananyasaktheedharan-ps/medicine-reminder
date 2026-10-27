@@ -9,7 +9,7 @@ export class CreateMedicineInput {
   @Field(() => ID) @IsUUID() profileId: string;
   @Field() @IsNotEmpty() name: string;
   @Field() @IsNotEmpty() dosage: string;
-  @Field({ nullable: true }) @IsOptional() instructions?: string;
+  @Field(() => String, { nullable: true }) @IsOptional() instructions?: string;
   @Field({ nullable: true }) @IsOptional() @Matches(DATE) startDate?: string;
   @Field({ nullable: true }) @IsOptional() @Matches(DATE) endDate?: string;
   @Field(() => [String]) @IsArray() @ArrayMinSize(1) @Matches(HHMM, { each: true }) times: string[];
@@ -20,7 +20,7 @@ export class UpdateMedicineInput {
   @Field(() => ID) @IsUUID() id: string;
   @Field({ nullable: true }) @IsOptional() @IsNotEmpty() name?: string;
   @Field({ nullable: true }) @IsOptional() @IsNotEmpty() dosage?: string;
-  @Field({ nullable: true }) @IsOptional() instructions?: string;
+  @Field(() => String, { nullable: true }) @IsOptional() instructions?: string;
   @Field({ nullable: true }) @IsOptional() @Matches(DATE) startDate?: string;
   @Field({ nullable: true }) @IsOptional() @Matches(DATE) endDate?: string;
   @Field({ nullable: true }) @IsOptional() @IsBoolean() active?: boolean;
