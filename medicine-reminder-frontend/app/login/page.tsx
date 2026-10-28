@@ -18,7 +18,7 @@ export default function LoginPage() {
     if (ready && user) router.replace("/dashboard");
   }, [ready, user, router]);
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
     const next: Record<string, string> = {};
     const emailErr = validateEmail(email);
@@ -28,7 +28,7 @@ export default function LoginPage() {
     setFormError("");
     if (Object.keys(next).length) return;
 
-    const err = login(email, password);
+    const err = await login(email, password);
     if (err) setFormError(err);
     else router.replace("/dashboard");
   }

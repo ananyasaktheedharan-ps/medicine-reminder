@@ -20,7 +20,7 @@ export default function RegisterPage() {
     if (ready && user) router.replace("/dashboard");
   }, [ready, user, router]);
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
     const next: Record<string, string> = {};
     const nameErr = validateName(name);
@@ -34,7 +34,7 @@ export default function RegisterPage() {
     setFormError("");
     if (Object.keys(next).length) return;
 
-    const err = register(name, email, password);
+    const err = await register(name, email, password);
     if (err) setFormError(err);
     else router.replace("/dashboard");
   }

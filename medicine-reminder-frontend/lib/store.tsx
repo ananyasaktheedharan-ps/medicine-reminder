@@ -12,6 +12,7 @@ import {
 } from "react";
 import type { DoseItem, DoseLog, DoseStatus, Medicine, Profile, User } from "./types";
 import { addDays, scheduledTimestamp, todayStr, uid } from "./dates";
+import { apolloClient, REGISTER, LOGIN } from "./graphql";
 
 /**
  * Local data layer (localStorage) so the frontend runs stand-alone.
@@ -19,9 +20,7 @@ import { addDays, scheduledTimestamp, todayStr, uid } from "./dates";
  * NestJS GraphQL backend is available.
  */
 
-interface StoredUser extends User {
-  password: string;
-}
+
 
 interface UserData {
   profiles: Profile[];
@@ -29,7 +28,6 @@ interface UserData {
   logs: DoseLog[];
 }
 
-const USERS_KEY = "mr_users";
 const SESSION_KEY = "mr_session";
 const dataKey = (userId: string) => `mr_data_${userId}`;
 
@@ -53,8 +51,8 @@ function write(key: string, value: unknown) {
 interface AppState {
   ready: boolean;
   user: User | null;
-  login: (email: string, password: string) => string | null;
-  register: (name: string, email: string, password: string) => string | null;
+  login: (email: string, password: string) => Promise<string | null>;
+register: (name: string, email: string, password: string) => Promise<string | null>;
   logout: () => void;
 
   profiles: Profile[];
@@ -130,47 +128,100 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /* ---------- auth ---------- */
-  const register = useCallback(
-    (name: string, email: string, password: string): string | null => {
-      const users = read<StoredUser[]>(USERS_KEY, []);
-      const normalized = email.trim().toLowerCase();
-      if (users.some((u) => u.email === normalized)) return "An account with this email already exists";
-      const created: StoredUser = { id: uid(), name: name.trim(), email: normalized, password };
-      write(USERS_KEY, [...users, created]);
-      const session: User = { id: created.id, name: created.name, email: created.email };
-      write(SESSION_KEY, session);
-      setUser(session);
-      loadUserData(session);
-      return null;
+    const register = useCallback(
+    async (name: string, email: string, password: string): Promise<string | null> => {
+      try {
+        const result = await apolloClient.mutate({
+          mutation: REGISTER,
+          variables: {
+            input: {
+              name: name.trim(),
+              email: email.trim().toLowerCase(),
+              password,
+            },
+          },
+        });
+
+        const created = result.data?.register?.user;
+        const token = result.data?.register?.accessToken;
+
+        if (!created || !token) {
+          return "Registration failed. Please try again.";
+        }
+
+        const session: User = {
+          id: created.id,
+          name: created.name,
+          email: created.email,
+        };
+
+        window.localStorage.setItem("mr_token", token);
+        write(SESSION_KEY, session);
+        setUser(session);
+        loadUserData(session);
+
+        return null;
+      } catch (error) {
+        return error instanceof Error
+          ? error.message
+          : "Registration failed. Please try again.";
+      }
     },
     [loadUserData],
   );
 
-  const login = useCallback(
-    (email: string, password: string): string | null => {
-      const users = read<StoredUser[]>(USERS_KEY, []);
-      const found = users.find((u) => u.email === email.trim().toLowerCase());
-      if (!found || found.password !== password) return "Invalid email or password";
-      const session: User = { id: found.id, name: found.name, email: found.email };
-      write(SESSION_KEY, session);
-      setUser(session);
-      loadUserData(session);
-      return null;
+    const login = useCallback(
+    async (email: string, password: string): Promise<string | null> => {
+      try {
+        const result = await apolloClient.mutate({
+          mutation: LOGIN,
+          variables: {
+            input: {
+              email: email.trim().toLowerCase(),
+              password,
+            },
+          },
+        });
+
+        const loggedIn = result.data?.login?.user;
+        const token = result.data?.login?.accessToken;
+
+        if (!loggedIn || !token) {
+          return "Login failed. Please try again.";
+        }
+
+        const session: User = {
+          id: loggedIn.id,
+          name: loggedIn.name,
+          email: loggedIn.email,
+        };
+
+        window.localStorage.setItem("mr_token", token);
+        write(SESSION_KEY, session);
+        setUser(session);
+        loadUserData(session);
+
+        return null;
+      } catch (error) {
+        return error instanceof Error
+          ? error.message
+          : "Login failed. Please try again.";
+      }
     },
     [loadUserData],
   );
 
   const logout = useCallback(() => {
-    try {
-      window.localStorage.removeItem(SESSION_KEY);
-    } catch {
-      /* ignore */
-    }
-    setUser(null);
-    setData({ profiles: [], medicines: [], logs: [] });
-    setActiveProfileId("");
-  }, []);
-
+  try {
+    window.localStorage.removeItem(SESSION_KEY);
+    window.localStorage.removeItem("mr_token");
+  } catch {
+    /* ignore */
+  }
+  setUser(null);
+  setData({ profiles: [], medicines: [], logs: [] });
+  setActiveProfileId("");
+}, []);
   /* ---------- profiles ---------- */
   const addProfile = useCallback((name: string, relation: string, email?: string) => {
     setData((d) => ({
